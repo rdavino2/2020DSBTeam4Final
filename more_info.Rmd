@@ -1,6 +1,6 @@
 ---
 title: "More information"
-author: "My names, team mates names"
+author: "Rocco Davino, Tung Nguyen, Sungwoo Nam"
 date: "Last updated on `r Sys.Date()`"
 output:
   html_document:
@@ -14,6 +14,6 @@ output:
 Comments in HTML are like this! 
 -->
 
-# SECTION NAME
+# More Info
 
-Write your "more information" section here.
+There is no additional info.

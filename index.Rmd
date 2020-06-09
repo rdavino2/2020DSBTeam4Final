@@ -21,7 +21,7 @@ library(broom)
 library(modelr)
 ```
 
-# Part 1: Load and clean the data
+# Part 1: Load and Clean the Data
 
 ```{r wrangling, message=FALSE, results='hide'}
 nbadata <- read_csv(file = "NBAData.csv")
@@ -36,27 +36,26 @@ nbadata$Salary_dbl <- as.numeric(gsub(",", "", nbadata$Salary_dbl))/1000000
 # Rename Length of Contract
 nbadata <- nbadata %>%
   rename(LOC = `Length of Contract`)
-# Make LOC factor?
 ```
 
 # Part 2: Exploratory Data Analysis
+
 We first take a look at the mean of salary. 
 
-```{r}
+```{r eval=FALSE}
 nbadata %>%
   summarise(mean_salary=mean(Salary_dbl))
 ```
 
+From this code, we see that the mean is 5.86 million dollars. We can also look at the distribution of the salary. 
 
-We can look at the distribution of the salary. 
-
-```{r}
+```{r message=FALSE}
 nbadata %>%
   ggplot(mapping=aes(x=Salary_dbl))+
   geom_histogram()
 ```
 
-This seems like the salary distribution is right skewed as expected. We see that there are players whose salaries are more than 18 million dollars. Let us find out who they are. 
+This seems like the salary distribution is right skewed, as expected. We see that there are players whose salaries are more than 18 million dollars. Let us find out who they are. 
 
 ```{r}
 nbadata %>%
@@ -64,10 +63,9 @@ nbadata %>%
   dplyr::select(Player, Team, Salary)
 ```
 
-
 Which teams have the largest average salary?
 
-```{r}
+```{r message=FALSE}
 # Bar chart
 nbadata %>%
   group_by(Team) %>%
@@ -75,17 +73,11 @@ nbadata %>%
   arrange(desc(AvgSal)) %>%
   slice(1:5) %>%
   ggplot() +
-    geom_bar(aes(x = Team, y = AvgSal, fill = Team), stat = "identity") +   # Look up how to avoid overlap 
+    geom_bar(aes(x = Team, y = AvgSal, fill = Team), stat = "identity") + 
     ylab("Average Salary")
 ```
 
-
-
-
-
-
-
-We visualize some contract data.
+Next, we visualize some contract data.
 
 ```{r}
 # LOC histogram
@@ -110,10 +102,7 @@ nbadata %>%
   xlab("Length of Contract") + ylab("Salary (millions USD)")
 ```
 
-
-We are interested in find variables to fit to our linear models. In order to find a good set of features, we do some visualizations. 
-
-First, does age have an effect on PER? At which age is PER the largest?
+We are interested in finding variables to fit to linear models. In order to find a good set of features, we do some visualizations. First, does age have an effect on PER? At which age is PER the largest?
 
 ```{r}
 # Scatter plot
@@ -128,44 +117,42 @@ nbadata %>%
     ylab("Density")
 ```
 
-
-We study the correlation between the average numer of shots made inside the 3-point line per game and salary? To help answer this, we use scatter plots. 
-
+We study the correlation between the average numer of shots made inside the 3-point line per game and salary. To help answer this, we use scatter plots. 
 
 ```{r}
 # Scatter plot
 nbadata %>%
   ggplot(aes(x = `2P`, y = Salary_dbl)) +
     geom_point(aes(color = Position)) + 
-    ylab("Salary (millions USD)") + xlab("2P (avg. # shots made from inside 3-point/game)")
+    ylab("Salary (millions USD)") + 
+    xlab("2P (avg. # shots made from inside 3-point/game)")
 ```
 
-There seem to a linear trend between 2P statisics and salary. 
-
-How does 2P compare to 2P%? 
+There seems to be a linear trend between the 2P statisic and salary. How does 2P compare to 2P%? 
 
 ```{r}
 # Scatter plot
 nbadata %>%
   ggplot(aes(x = `2P%`, y = Salary_dbl)) +
     geom_point(aes(color = Position)) +
-    ylab("Salary (millions USD)") + xlab("2P% (avg. # made inside 3-point/avg. # total inside 3-point)")
+    ylab("Salary (millions USD)") + 
+    xlab("2P% (avg. # made inside 3-point/avg. # total inside 3-point)")
 ```
 
-It seems 2P and 2P% have different effects on salary. We will study them in more details in the modeling part. 
+It seems 2P and 2P% have different effects on salary. We will study them in more detail in the modeling part. We also look at the relation between 3P and salary. It appears that the effect of 3P is rather different from the effect of 2P as well. 
 
-We also look at the relation between 3P and salary. It appears that the effect of 3P is rather different from the effect of 2P. 
 ```{r}
 # Scatter plot
 nbadata %>%
   ggplot(aes(x = `3P`, y = Salary_dbl)) +
     geom_point(aes(color = Position)) +
-    ylab("Salary (millions USD)") + xlab("3P (avg. # shots made from outside 3-point/game)")
+    ylab("Salary (millions USD)") +
+    xlab("3P (avg. # shots made from outside 3-point/game)")
 ```
 
 # Part 3: Modeling
-We want to predict the salary from stastics.  Our models appear to predict salary trend well. 
-First, we look at 2P vs salary. 
+
+We want to predict the salary from stastics.  Our models appear to predict trends in salary rather well. First, we consider 2P vs. salary. 
 
 ```{r}
 # Model 2 by position 
@@ -189,11 +176,11 @@ unnest(nbadata0, aug) %>%
   ggplot() + 
     geom_line(aes(x = `X2P`, y = .fitted, color = Position)) +
     geom_point(aes(x = `X2P`, y = Salary_dbl, color = Position)) + 
-    xlab("2P (avg. # shots made from inside 3-point/game)") + ylab("Salary (millions USD)")
+    xlab("2P (avg. # shots made from inside 3-point/game)") + 
+    ylab("Salary (millions USD)")
 ```
 
 For each position, the R^2 value is over 0.65 with positive slope. Thus it seems that 2P alone goes pretty far in impacting salary. Let us see if the same holds true for 2P%, the average number of shots made inside the 3-point line divided by the average number of total shots taken inside the 3-point line.
-
 
 ```{r}
 # Model 2 % by position 
@@ -218,7 +205,8 @@ unnest(nbadata3, aug) %>%
   ggplot() + 
     geom_line(aes(x = `X2P.`, y = .fitted, color = Position)) + 
     geom_point(aes(x = `X2P.`, y = Salary_dbl, color = Position)) +
-    ylab("Salary (millions USD)") + xlab("2P% (avg. # made inside 3-point/avg. # total made inside 3-point)")
+    ylab("Salary (millions USD)") + 
+    xlab("2P% (avg. # made inside 3-point/avg. # total made inside 3-point)")
 ```
 
 The R^2 values are all less than 0.2, and the lines do not fit the data nearly as well. Thus the average number of shots made per game appears to have a larger impact than the percentage. Three pointers have become more prominent recently; did they have any impact on salary circa 2012?
@@ -245,17 +233,20 @@ unnest(nbadata1, aug) %>%
   ggplot() + 
     geom_line(aes(x = `X3P`, y = .fitted, color = Position)) + 
     geom_point(aes(x = `X3P`, y = Salary_dbl, color = Position)) +
-    ylab("Salary (millions USD)") + xlab("3P (avg. # shots made from outside 3-point/game)")
+    ylab("Salary (millions USD)") + 
+    xlab("3P (avg. # shots made from outside 3-point/game)")
 ```
 
 As we can visually confirm, these shots already appear to be less important for salary. For centers, they do not matter at all. Even for forwards and guards, the R^2 values are less than 0.09 and the slopes are small. Moreover, the p-value for forwards is greater than 0.05. However, it does look like 3-point shots have some impact on the salary of guards, moreso than forwards, as expected. Three pointers do not affect salary very much for this data set. It would be interesting to study more recent data and see if this has changed.
-
 
 We did not look at how to compute PER--how complex is it? We study this using multiple regression in terms of simpler statistics, with back selection.
 
 ```{r}
 # Regression with all variables
-nba_mod2 <- lm(PER ~ GS + FG + FGA + `FG%` + FT + FTA + `FT%` + `3P` + `2P` + ORB + DRB + TRB + `ORB%` + `DRB%` + AST + `AST%` + STL + `STL%` + BLK + `BLK%` + TOV + `TOV%` + PF + MP, data = nbadata)
+nba_mod2 <- lm(
+  PER ~ GS + FG + FGA + `FG%` + FT + FTA + `FT%` + `3P` + `2P` + ORB + DRB +
+  TRB + `ORB%` + `DRB%` + AST + `AST%` + STL + `STL%` + BLK + `BLK%` + TOV + 
+  `TOV%` + PF + MP, data = nbadata)
 # Selection
 nba_mod2_step <- stepAIC(nba_mod2, direction = "backward", 
                       trace = FALSE)
